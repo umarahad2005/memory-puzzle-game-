@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Memory Puzzle Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 20px;
+            border-radius: 12px;
+            min-width: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .countdown-timer {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-message {
+            font-size: 1.3em;
+            margin: 20px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .grid-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .grid-button {
+            width: 90px;
+            height: 90px;
+            font-size: 2.5em;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .grid-button:hover::before {
+            left: 100%;
+        }
+
+        .grid-button:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .grid-button:active {
+            transform: translateY(-1px);
+        }
+
+        .grid-button.show-character {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            animation: characterPulse 0.6s ease-in-out;
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .grid-button.correct {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            animation: correctBounce 0.8s ease-in-out;
+            border-color: #4CAF50;
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.8);
+        }
+
+        .grid-button.wrong {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            animation: wrongShake 0.6s ease-in-out;
+            border-color: #f44336;
+            box-shadow: 0 0 25px rgba(244, 67, 54, 0.8);
+        }
+
+        .grid-button.missed {
+            background: linear-gradient(135deg, #FF9800, #f57c00);
+            animation: missedHighlight 1s ease-in-out;
+            border-color: #FF9800;
+            box-shadow: 0 0 25px rgba(255, 152, 0, 0.8);
+        }
+
+        @keyframes characterPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes correctBounce {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1.1); }
+            75% { transform: scale(1.15); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        @keyframes missedHighlight {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid transparent;
+            min-width: 140px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: linear-gradient(135deg, #45a049, #388e3c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-start:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(135deg, #d32f2f, #c62828);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions {
+            margin-top: 25px;
+            font-size: 1em;
+            line-height: 1.6;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+            width: 0%;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .grid-button {
+                width: 70px;
+                height: 70px;
+                font-size: 2em;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Memory Puzzle Challenge</h1>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="round">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Best Score</div>
+                <div class="stat-value" id="bestScore">0</div>
+            </div>
+        </div>
+
+        <div class="countdown-timer" id="countdown"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="status-message" id="status">Click 'Start Game' to begin your memory challenge!</div>
+        
+        <div class="grid-container">
+            <div class="grid" id="grid">
+                <!-- Grid buttons will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn" onclick="startGame()">Start Game</button>
+            <button class="btn btn-reset" onclick="resetGame()">Reset</button>
+        </div>
+        
+        <div class="instructions">
+            <strong>🧠 Memory Challenge Instructions:</strong><br><br>
+            <strong>Phase 1:</strong> Watch carefully as 3 unique characters appear on random positions<br>
+            <strong>Phase 2:</strong> Characters are visible for exactly 5 seconds with countdown<br>
+            <strong>Phase 3:</strong> Characters disappear - now recall their positions!<br>
+            <strong>Phase 4:</strong> Click on all 3 positions where characters were located<br><br>
+            <strong>Scoring:</strong> +100 points per correct position, bonus for perfect rounds!<br>
+            <strong>Challenge:</strong> Positions randomize each round - no patterns to memorize!
+        </div>
+    </div>
+
+    <script>
+        class EnhancedMemoryPuzzle {
+            constructor() {
+                this.gridSize = 3;
+                this.characters = ['★', '♦', '●']; // High contrast characters
+                this.characterPositions = {};
+                this.score = 0;
+                this.round = 1;
+                this.gameActive = false;
+                this.showTime = 5000; // 5 seconds
+                this.buttons = [];
+                this.selectedPositions = [];
+                this.totalAttempts = 0;
+                this.correctAttempts = 0;
+                this.startTime = 0;
+                this.bestScore = localStorage.getItem('memoryPuzzleBest') || 0;
+                this.countdownInterval = null;
+                this.progressInterval = null;
+                
+                this.initializeGrid();
+                this.updateDisplay();
+            }
+            
+            initializeGrid() {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                this.buttons = [];
+                
+                for (let i = 0; i < this.gridSize * this.gridSize; i++) {
+                    const button = document.createElement('button');
+                    button.className = 'grid-button';
+                    button.onclick = () => this.buttonClicked(Math.floor(i / 3), i % 3);
+                    grid.appendChild(button);
+                    this.buttons.push(button);
+                }
+            }
+            
+            startGame() {
+                this.gameActive = true;
+                this.selectedPositions = [];
+                this.startTime = Date.now();
+                document.getElementById('startBtn').disabled = true;
+                
+                this.clearGrid();
+                this.generateRandomPositions();
+                this.showCharacters();
+                this.startCountdown();
+            }
+            
+            generateRandomPositions() {
+                this.characterPositions = {};
+                const availablePositions = [];
+                
+                // Create array of all possible positions
+                for (let i = 0; i < this.gridSize; i++) {
+                    for (let j = 0; j < this.gridSize; j++) {
+                        availablePositions.push([i, j]);
+                    }
+                }
+                
+                // Randomly assign positions to characters
+                this.characters.forEach(char => {
+                    if (availablePositions.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * availablePositions.length);
+                        const position = availablePositions.splice(randomIndex, 1)[0];
+                        this.characterPositions[char] = position;
+                    }
+                });
+            }
+            
+            showCharacters() {
+                document.getElementById('status').textContent = 'Memorize these positions carefully!';
+                
+                // Display all characters at their random positions
+                Object.entries(this.characterPositions).forEach(([char, [row, col]]) => {
+                    const buttonIndex = row * 3 + col;
+                    const button = this.buttons[buttonIndex];
+                    button.textContent = char;
+                    button.classList.add('show-character');
+                });
+            }
+            
+            startCountdown() {
+                let timeLeft = this.showTime / 1000;
+                const totalTime = timeLeft;
+                
+                this.countdownInterval = setInterval(() => {
+                    document.getElementById('countdown').textContent = timeLeft;
+                    
+                    // Update progress bar
+                    const progress = ((totalTime - timeLeft) / totalTime) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    timeLeft--;
+                    
+                    if (timeLeft < 0) {
+                        clearInterval(this.countdownInterval);
+                        this.hideCharacters();
+                    }
+                }, 1000);
+            }
+            
+            hideCharacters() {
+                this.clearGrid();
+                document.getElementById('countdown').textContent = '';
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('status').textContent = 'Now click on the positions where the characters were located!';
+            }
+            
+            clearGrid() {
+                this.buttons.forEach(button => {
+                    button.textContent = '';
+                    button.className = 'grid-button';
+                });
+            }
+            
+            buttonClicked(row, col) {
+                if (!this.gameActive || this.selectedPositions.length >= 3) return;
+                
+                const buttonIndex = row * 3 + col;
+                const button = this.buttons[buttonIndex];
+                
+                // Check if position already selected
+                const alreadySelected = this.selectedPositions.some(pos => pos[0] === row && pos[1] === col);
+                if (alreadySelected) return;
+                
+                this.selectedPositions.push([row, col]);
+                
+                // Find which character should be at this position
+                let correctChar = null;
+                for (const [char, [charRow, charCol]] of Object.entries(this.characterPositions)) {
+                    if (charRow === row && charCol === col) {
+                        correctChar = char;
+                        break;
+                    }
+                }
+                
+                if (correctChar) {
+                    // Correct selection
+                    button.textContent = correctChar;
+                    button.classList.add('correct');
+                    this.score += 100;
+                    this.correctAttempts++;
+                } else {
+                    // Wrong selection
+                    button.textContent = '✗';
+                    button.classList.add('wrong');
+                }
+                
+                this.totalAttempts++;
+                
+                // Check if all selections made
+                if (this.selectedPositions.length === 3) {
+                    setTimeout(() => this.evaluateRound(), 1000);
+                }
+                
+                this.updateDisplay();
+            }
+            
+            evaluateRound() {
+                // Show all correct positions
+                Object.entries(this.characterPositions).forEach(([char, [row, col]]) => {
+                    const buttonIndex = row * 3 + col;
+                    const button = this.buttons[buttonIndex];
+                    
+                    if (!button.textContent || button.textContent === '✗') {
+                        button.textContent = char;
+                        button.classList.remove('wrong');
+                        button.classList.add('missed');
+                    }
+                });
+                
+                const correctSelections = this.selectedPositions.filter(([row, col]) => {
+                    return Object.values(this.characterPositions).some(([charRow, charCol]) => 
+                        charRow === row && charCol === col
+                    );
+                }).length;
+                
+                // Calculate response time
+                const responseTime = ((Date.now() - this.startTime) / 1000).toFixed(1);
+                
+                if (correctSelections === 3) {
+                    // Perfect round bonus
+                    this.score += 200;
+                    document.getElementById('status').textContent = `Perfect! All 3 correct in ${responseTime}s! Bonus: +200 points`;
+                    setTimeout(() => this.nextRound(), 2500);
+                } else {
+                    document.getElementById('status').textContent = `Round ${this.round} complete: ${correctSelections}/3 correct in ${responseTime}s`;
+                    setTimeout(() => this.endGame(), 3000);
+                }
+                
+                this.updateDisplay();
+            }
+            
+            nextRound() {
+                this.round++;
+                // Slightly decrease show time for increased difficulty
+                this.showTime = Math.max(3000, this.showTime - 100);
+                this.startGame();
+            }
+            
+            endGame() {
+                this.gameActive = false;
+                document.getElementById('startBtn').disabled = false;
+                
+                // Update best score
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('memoryPuzzleBest', this.bestScore);
+                    document.getElementById('status').textContent = `🎉 New Best Score! Final Score: ${this.score}`;
+                } else {
+                    document.getElementById('status').textContent = `Game Over! Final Score: ${this.score}`;
+                }
+                
+                this.updateDisplay();
+            }
+            
+            resetGame() {
+                this.gameActive = false;
+                this.score = 0;
+                this.round = 1;
+                this.selectedPositions = [];
+                this.totalAttempts = 0;
+                this.correctAttempts = 0;
+                this.showTime = 5000;
+                
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                }
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('status').textContent = "Click 'Start Game' to begin your memory challenge!";
+                document.getElementById('countdown').textContent = '';
+                document.getElementById('progressFill').style.width = '0%';
+                
+                this.clearGrid();
+                this.updateDisplay();
+            }
+            
+            updateDisplay() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('round').textContent = this.round;
+                document.getElementById('bestScore').textContent = this.bestScore;
+                
+                const accuracy = this.totalAttempts > 0 ? 
+                    Math.round((this.correctAttempts / this.totalAttempts) * 100) : 0;
+                document.getElementById('accuracy').textContent = accuracy + '%';
+            }
+        }
+        
+        // Initialize the game
+        const game = new EnhancedMemoryPuzzle();
+        
+        // Global functions for button onclick events
+        function startGame() {
+            game.startGame();
+        }
+        
+        function resetGame() {
+            game.resetGame();
+        }
+    </script>
+</body>
+</html>
