@@ -186,7 +186,9 @@ function updateScore(correctClicks, totalClicks) {
   *(Add your screenshots/images here)*
 
 - **Play it here:** [Memory Puzzle Challenge](#)  
-  **Explore the code:** [GitHub Repository](#)
+  **Explore the code:** [GitHub Repository]
+  https://github.com/umarahad2005/memory-puzzle-game-
+  (#)
 
 ---
 
